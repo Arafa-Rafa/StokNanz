@@ -115,6 +115,14 @@
                 <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyanbrand-600 to-teal-500 hover:from-cyanbrand-500 hover:to-teal-400 text-white font-bold rounded-xl text-sm shadow-lg shadow-cyanbrand-600/20 transition">
                     <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Cloud Sekarang
                 </button>
+
+                <!-- Tombol Uji Coba / Demo 24 Jam -->
+                <div class="pt-2 border-t border-slate-800 text-center">
+                    <button type="button" onclick="handleTrialLogin()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-cyanbrand-300 border border-slate-700 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask text-amber-400"></i> Masuk Akun Uji Coba (Demo 24 Jam)
+                    </button>
+                    <p class="text-[10px] text-slate-500 mt-1.5">*Data pada akun uji coba akan terhapus otomatis setelah 24 jam.</p>
+                </div>
             </form>
         </div>
     </div>
@@ -624,6 +632,7 @@
 
             initCloudListeners();
             checkAuthentication();
+            checkTrialExpiration();
         });
 
         setTimeout(() => {
@@ -676,16 +685,45 @@
             if (sessionRaw) {
                 try {
                     const sessionUser = JSON.parse(sessionRaw);
-                    const validUser = users.find(u => u.username.toLowerCase() === sessionUser.username.toLowerCase());
-                    if (validUser) {
-                        currentUser = validUser;
-                        applyUserPermissions();
-                        document.getElementById('loginOverlay').classList.add('hidden');
-                        return;
-                    }
+                    currentUser = sessionUser;
+                    applyUserPermissions();
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    return;
                 } catch(e) {}
             }
             document.getElementById('loginOverlay').classList.remove('hidden');
+        }
+
+        // Fungsi Cek Trial 24 Jam
+        function checkTrialExpiration() {
+            const trialTime = localStorage.getItem('stoknanz_trial_time');
+            if (trialTime) {
+                const now = new Date().getTime();
+                const diffHours = (now - parseInt(trialTime)) / (1000 * 60 * 60);
+                if (diffHours >= 24) {
+                    // Hapus session trial dan data terkait jika sudah 24 jam
+                    localStorage.removeItem('stoknanz_trial_time');
+                    sessionStorage.removeItem(SESSION_KEY);
+                    alert('Masa uji coba 24 jam Anda telah habis. Silakan hubungi admin untuk akses penuh.');
+                    location.reload();
+                }
+            }
+        }
+
+        // Handler Tombol Uji Coba (Trial 24 Jam)
+        function handleTrialLogin() {
+            const trialUser = { id: 'usr_trial_' + Date.now(), name: 'Tamu Uji Coba', username: 'guest_trial', role: 'user' };
+            currentUser = trialUser;
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(trialUser));
+            
+            // Tandai waktu mulai trial jika belum ada
+            if (!localStorage.getItem('stoknanz_trial_time')) {
+                localStorage.setItem('stoknanz_trial_time', new Date().getTime().toString());
+            }
+
+            document.getElementById('loginOverlay').classList.add('hidden');
+            applyUserPermissions();
+            showToast('Berhasil masuk mode uji coba (Aktif 24 Jam)!');
         }
 
         async function handleLogin(e) {
@@ -701,7 +739,7 @@
 
             if (user) {
                 currentUser = user;
-                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, role: user.role }));
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, role: user.role, name: user.name }));
                 document.getElementById('loginError').classList.add('hidden');
                 document.getElementById('loginOverlay').classList.add('hidden');
                 
@@ -724,7 +762,7 @@
         function applyUserPermissions() {
             if (!currentUser) return;
             document.getElementById('headerUserName').innerText = currentUser.name;
-            document.getElementById('headerUserRole').innerText = currentUser.role === 'owner' ? '👑 Owner' : '👤 Pengguna';
+            document.getElementById('headerUserRole').innerText = currentUser.role === 'owner' ? '👑 Owner' : '🧪 Trial User';
             document.getElementById('btnManageUsers').classList.toggle('hidden', currentUser.role !== 'owner');
         }
 
@@ -1120,7 +1158,7 @@
         // Backup & Restore Database
         function exportUserDatabase() {
             const dataToExport = { appName: 'STOKNANZ_CLOUD', version: '2.0', accounts, trashAccounts, logs, users };
-            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' >);
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = `stoknanz_cloud_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1177,3 +1215,5 @@
     </script>
 </body>
 </html>
+```
+    
