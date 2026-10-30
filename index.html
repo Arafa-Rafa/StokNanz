@@ -90,7 +90,8 @@
                 <p class="text-xs text-slate-400 mt-1">Cloud Sync Real-Time Multi-Device</p>
             </div>
 
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 relative" method="POST">
+            <!-- HAPUS method="POST" DARI FORM INI -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 relative">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Username</label>
                     <div class="relative">
@@ -1243,4 +1244,4 @@
         function escapeJsString(str) { return !str ? '' : str.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
     </script>
 </body>
-                      </html>
+    </html>
